@@ -1,0 +1,1287 @@
+
+package smurfs;
+
+import java.awt.EventQueue;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
+
+import javax.swing.JLabel;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.awt.Color;
+import java.awt.Font;
+
+public class oyun extends JFrame {
+	altin altin = new altin();
+	mantar mantar = new mantar();
+	private JPanel contentPane;
+	static int x, y, satir, sutun, key = 0, hiz = 0, gold, mntr, yon_x, yon_y;
+	static obje[][] birim;
+	static oyuncu kahraman = new oyuncu();
+	static ArrayList<oyuncu> oyuncular = new ArrayList<oyuncu>();
+	static ArrayList<dusman> karakterler = new ArrayList<dusman>();
+	static ArrayList<JLabel> dusman_kutu = new ArrayList<JLabel>();
+	static String str;
+	static char[][] temp;
+	static int dusman_sayisi = 0;
+	static String[][] dusman_karakter = new String[2][2];
+	static int i = 0, j, l = 0, k = 0;
+	static int[][] dizi;
+	static int[][] map;
+	static String adres = "C:\\Users\\Arslan\\Desktop\\prolab2.1\\src\\";
+	static JLabel dusman, dusman1;
+	static JLabel scor_degisen = new JLabel();
+	static JLabel bitis_ekrani;
+	static JLabel oyuncu;
+
+	public static void main(String[] args) {
+		dosya_oku();
+
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					oyun frame = new oyun();
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	public oyun() {
+		gozlukluSirin s1 = new gozlukluSirin();
+		oyuncular.add(s1);
+		tembelSirin s2 = new tembelSirin();
+		oyuncular.add(s2);
+		kahraman.setX(6);
+		kahraman.setY(5);
+		kahraman.setScor(20);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(150, 50, 1050, 700);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+		oyuncu = new JLabel();
+		oyuncu.setBounds(100 + (kahraman.getX() * 50), 50 + (kahraman.getY() * 50), 50, 50);
+		oyuncu.setVisible(false);
+		contentPane.add(oyuncu);
+		JLabel baslangıc_ekran = new JLabel("");
+		baslangıc_ekran.setBackground(Color.WHITE);
+		baslangıc_ekran.setBounds(350, 250, 300, 200);
+		contentPane.add(baslangıc_ekran);
+		bitis_ekrani = new JLabel("oyun sonlandi");
+		bitis_ekrani.setFont(new Font("Tahoma", Font.PLAIN, 34));
+		bitis_ekrani.setBounds(50, 25, 900, 650);
+		bitis_ekrani.setVisible(false);
+		contentPane.add(bitis_ekrani);
+		scor_degisen.setBounds(850, 150, 150, 40);
+		scor_degisen.setVisible(false);
+		contentPane.add(scor_degisen);
+		JLabel scor_baslık = new JLabel("oyuncu scor");
+		scor_baslık.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		scor_baslık.setBounds(840, 100, 150, 40);
+		scor_baslık.setVisible(false);
+		contentPane.add(scor_baslık);
+		JLabel karakter_secme = new JLabel("karakterini sec");
+		karakter_secme.setFont(new Font("Tahoma", Font.PLAIN, 34));
+		karakter_secme.setBounds(400, 177, 250, 100);
+		contentPane.add(karakter_secme);
+		JLabel tembel_yazı = new JLabel("Tembel Sirin(T'ye t\u0131klay\u0131n\u0131z) ");
+		tembel_yazı.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		JLabel gozluklu_yazı = new JLabel("Gozluklu Sirin(G'ye t\u0131klay\u0131n\u0131z) ");
+		gozluklu_yazı.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		gozluklu_yazı.setBounds(250, 300, 250, 76);
+		contentPane.add(gozluklu_yazı);
+		tembel_yazı.setBounds(550, 300, 250, 76);
+		contentPane.add(tembel_yazı);
+		JLabel gozluklu_resim = new JLabel("");
+		gozluklu_resim.setIcon(new ImageIcon(adres + "bs_gozluklu.jpg"));
+		gozluklu_resim.setBounds(325, 380, 98, 150);
+		contentPane.add(gozluklu_resim);
+		JLabel tembel_resim = new JLabel("");
+		tembel_resim.setIcon(new ImageIcon(adres + "bs_tembel.jpg"));
+		tembel_resim.setBounds(600, 380, 150, 150);
+		contentPane.add(tembel_resim);
+		dusman1 = new JLabel("");
+
+		dusman1.setVisible(false);
+		contentPane.add(dusman1);
+		dusman = new JLabel("");
+		dusman.setVisible(false);
+		contentPane.add(dusman);
+		addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+
+					if (hiz == 2 && kahraman.getY() == 7 && kahraman.getX() == 11) {
+						kahraman.setX(12);
+						reset_map();
+					} else if ((birim[kahraman.getY()][kahraman.getX() + hiz].isDuvar() == false
+							|| oyuncular.get(key).getId() == 1)) {
+
+						if (birim[kahraman.getY()][kahraman.getX() + 1].isDuvar() == false) {
+							int a = hiz;
+							gold = 0;
+							mntr = 0;
+							if (oyuncular.get(key).getId() == 1
+									&& (birim[kahraman.getY()][kahraman.getX() + hiz].isDuvar() == true)) {
+								hiz = 1;
+
+							}
+							if (birim[kahraman.getY()][kahraman.getX() + 1].isGold() == true) {
+								gold = 1;
+								yon_x = -1;
+								yon_y = 0;
+							}
+							if (birim[kahraman.getY()][kahraman.getX() + 1].isMantar() == true) {
+								mntr = 1;
+								yon_x = -1;
+								yon_y = 0;
+							}
+							x = (int) oyuncu.getBounds().getX();
+							y = (int) oyuncu.getBounds().getY();
+							if (x < 840)
+								x += 50 * hiz;
+							kahraman.setX(hiz + kahraman.getX());
+							hiz = a;
+							oyuncu.setBounds(x, y, 50, 50);
+							reset_map();
+						}
+					}
+
+				}
+
+				if (e.getKeyCode() == KeyEvent.VK_LEFT
+						&& (birim[kahraman.getY()][kahraman.getX() - hiz].isDuvar() == false
+								|| oyuncular.get(key).getId() == 1)) {
+					if (birim[kahraman.getY()][kahraman.getX() - 1].isDuvar() == false) {
+						int a = hiz;
+						gold = 0;
+						mntr = 0;
+						if (oyuncular.get(key).getId() == 1
+								&& (birim[kahraman.getY()][kahraman.getX() - hiz].isDuvar() == true)) {
+							hiz = 1;
+
+						}
+						if (birim[kahraman.getY()][kahraman.getX() - 1].isGold() == true) {
+							gold = 1;
+							yon_x = 1;
+							yon_y = 0;
+						}
+						if (birim[kahraman.getY()][kahraman.getX() - 1].isMantar() == true) {
+							mntr = 1;
+							yon_x = 1;
+							yon_y = 0;
+						}
+						x = (int) oyuncu.getBounds().getX();
+						y = (int) oyuncu.getBounds().getY();
+						if (x > 0)
+							x -= 50 * hiz;
+						oyuncu.setBounds(x, y, 50, 50);
+						kahraman.setX(kahraman.getX() - hiz);
+						hiz = a;
+						reset_map();
+					}
+				}
+				if (e.getKeyCode() == KeyEvent.VK_UP
+						&& (birim[kahraman.getY() - hiz][kahraman.getX()].isDuvar() == false
+								|| oyuncular.get(key).getId() == 1)) {
+					if (birim[kahraman.getY() - 1][kahraman.getX()].isDuvar() == false) {
+						int a = hiz;
+						gold = 0;
+						mntr = 0;
+						if (oyuncular.get(key).getId() == 1
+								&& (birim[kahraman.getY() - hiz][kahraman.getX()].isDuvar() == true)) {
+							hiz = 1;
+
+						}
+						if (birim[kahraman.getY() - 1][kahraman.getX()].isMantar() == true) {
+							mntr = 1;
+							yon_x = 0;
+							yon_y = 1;
+						}
+						if (birim[kahraman.getY() - 1][kahraman.getX()].isGold() == true) {
+							gold = 1;
+							yon_x = 0;
+							yon_y = 1;
+						}
+						x = (int) oyuncu.getBounds().getX();
+						y = (int) oyuncu.getBounds().getY();
+						if (y > 0)
+							y -= 50 * hiz;
+						oyuncu.setBounds(x, y, 50, 50);
+						kahraman.setY(kahraman.getY() - hiz);
+						hiz = a;
+						reset_map();
+					}
+				}
+
+				if (e.getKeyCode() == KeyEvent.VK_DOWN
+						&& (birim[kahraman.getY() + hiz][kahraman.getX()].isDuvar() == false
+								|| oyuncular.get(key).getId() == 1)) {
+					if (birim[kahraman.getY() + 1][kahraman.getX()].isDuvar() == false) {
+						int a = hiz;
+						gold = 0;
+						mntr = 0;
+						if (oyuncular.get(key).getId() == 1
+								&& (birim[kahraman.getY() + hiz][kahraman.getX()].isDuvar() == true)) {
+							hiz = 1;
+
+						}
+						if (birim[kahraman.getY() + 1][kahraman.getX()].isGold() == true) {
+							gold = 1;
+							yon_x = 0;
+							yon_y = -1;
+						}
+						if (birim[kahraman.getY() + 1][kahraman.getX()].isMantar() == true) {
+							mntr = 1;
+							yon_x = 0;
+							yon_y = -1;
+						}
+						x = (int) oyuncu.getBounds().getX();
+						y = (int) oyuncu.getBounds().getY();
+						if (y < 700)
+							y += 50 * hiz;
+						oyuncu.setBounds(x, y, 50, 50);
+						kahraman.setY(kahraman.getY() + hiz);
+						hiz = a;
+						reset_map();
+					}
+
+				}
+				if (e.getKeyCode() == KeyEvent.VK_G) {
+					key = 0;
+					gozlukluSirin kahraman = new gozlukluSirin();
+					kahraman.setId(1);
+					hiz = kahraman.getHiz();
+					oyuncu.setVisible(true);
+					baslangıc_ekran.setVisible(false);
+					scor_degisen.setVisible(true);
+					scor_baslık.setVisible(true);
+					dusman.setVisible(true);
+					oyuncu.setVisible(true);
+					baslangıc_ekran.setVisible(false);
+					scor_degisen.setVisible(true);
+					scor_baslık.setVisible(true);
+					dusman.setVisible(true);
+					gozluklu_resim.setVisible(false);
+					tembel_resim.setVisible(false);
+					tembel_yazı.setVisible(false);
+					gozluklu_yazı.setVisible(false);
+					karakter_secme.setVisible(false);
+					oyuncu.setIcon(new ImageIcon(adres + "gozluklu_50.jpg"));
+					dusman_konumlandır();
+					Button_tıklandı();
+					Timer myTimer = new Timer();
+					TimerTask gorev = new TimerTask() {
+						public void run() {
+							run_map();
+						}
+					};
+					myTimer.schedule(gorev, 0, 7000);
+				}
+				if (e.getKeyCode() == KeyEvent.VK_T) {
+					key = 1;
+					tembelSirin kahraman = new tembelSirin();
+					kahraman.setId(2);
+					hiz = kahraman.getHiz();
+					oyuncu.setVisible(true);
+					baslangıc_ekran.setVisible(false);
+					scor_degisen.setVisible(true);
+					scor_baslık.setVisible(true);
+					dusman.setVisible(true);
+					oyuncu.setVisible(true);
+					baslangıc_ekran.setVisible(false);
+					scor_degisen.setVisible(true);
+					scor_baslık.setVisible(true);
+					dusman.setVisible(true);
+					gozluklu_resim.setVisible(false);
+					tembel_resim.setVisible(false);
+					tembel_yazı.setVisible(false);
+					gozluklu_yazı.setVisible(false);
+					karakter_secme.setVisible(false);
+					oyuncu.setIcon(new ImageIcon(adres + "tembel_50.jpg"));
+					dusman_konumlandır();
+					Button_tıklandı();
+					Timer myTimer = new Timer();
+					TimerTask gorev = new TimerTask() {
+						public void run() {
+							run_map();
+						}
+					};
+					myTimer.schedule(gorev, 0, 7000);
+				}
+			}
+		});
+	}
+
+	public void reset_map() {
+
+		String scorumuz = Integer.toString(kahraman.getScor().puanGoster());
+		scor_degisen.setText(scorumuz);
+		karakterHareketEttir();
+		karsılasma_ara();
+		enKisaYoluHesapla();
+		deleteImage_new();
+		yolciz();
+		altin.setterGold(birim, satir, sutun, adres);
+		mantar.setterMantar(birim, satir, sutun, adres);
+		giris_resim_ayarla();
+	}
+
+	public void run_map() {
+		deleteImage();
+		mantar.generateMantar(birim, satir, sutun);
+		altin.generateGold(birim, satir, sutun);
+		yolciz();
+		altin.setterGold(birim, satir, sutun, adres);
+		mantar.setterMantar(birim, satir, sutun, adres);
+		giris_resim_ayarla();
+	}
+
+	public void giris_resim_ayarla() {
+		birim[5][0].setIcon(new ImageIcon(adres + "c_50.jpg"));
+		birim[10][3].setIcon(new ImageIcon(adres + "d_50.jpg"));
+		birim[0][10].setIcon(new ImageIcon(adres + "b_50.jpg"));
+		birim[0][3].setIcon(new ImageIcon(adres + "a_50.jpg"));
+		birim[7][12].setIcon(new ImageIcon(adres + "sirine_50.jpg"));
+		birim[5][0].setDuvar(true);
+		birim[10][3].setDuvar(true);
+		birim[0][10].setDuvar(true);
+		birim[0][3].setDuvar(true);
+	}
+
+	public void Button_tıklandı() {
+		birim = new obje[satir][sutun];
+		int[][] dizi = map;
+		for (int i = 0; i < satir; i++) {
+			for (int j = 0; j < sutun; j++) {
+				birim[i][j] = new obje();
+				birim[i][j].setBounds(100 + (j * 50), 50 + (i * 50), 50, 50);
+				if (dizi[i][j] == 0) {
+					birim[i][j].setDuvar(true);
+					birim[i][j].setIcon(new ImageIcon(adres + "black_50.jpg"));
+				}
+				if (dizi[i][j] == 1) {
+					birim[i][j].setDuvar(false);
+					birim[i][j].setIcon(new ImageIcon(adres + "white_50.jpg"));
+				}
+				contentPane.add(birim[i][j]);
+				contentPane.repaint();
+			}
+		}
+		enKisaYoluHesapla();
+		yolciz();
+	}
+
+	public static void dosya_oku() {
+		String dosyaYolu = adres + "Harita.txt";
+		try {
+			File dosya = new File(dosyaYolu);
+			BufferedReader oku = new BufferedReader(new InputStreamReader(new FileInputStream(dosya), "UTF8"));
+			map = new int[11][13];
+			String[] temp;
+			int i = 0, j = 0, a = 0;
+			while ((str = oku.readLine()) != null) {
+				if (str.contains(",")) {
+					dusman_sayisi++;
+					str = str.replace("Karakter:", "");
+					str = str.replace("Kapi:", "");
+					temp = str.split(",");
+					dusman_karakter[a][0] = temp[0];
+					dusman_karakter[a][1] = temp[1];
+					for (i = 0; i < dusman_karakter.length - 1; i++) {
+					}
+					a++;
+				}
+				if (str.charAt(0) == '0' || str.charAt(0) == '1') {
+					j = 0;
+					temp = str.split("\t");
+					for (int k = 0; k < temp.length; k++, j++) {
+						if (temp[k].equals("0")) {
+							map[i - 1][j] = 0;
+						} else if (temp[k].equals("1")) {
+							map[i - 1][j] = 1;
+						}
+					}
+					i++;
+				}
+			}
+			satir = map.length;
+			sutun = map[0].length;
+			oku.close();
+		} catch (UnsupportedEncodingException e) {
+			System.out.println(e.getMessage());
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+	}
+
+	public void deleteImage_new() {
+		for (int i = 0; i < satir; i++) {
+			for (int j = 0; j < sutun; j++) {
+				if (birim[i][j].isMantar() == true) {
+					birim[i][j].setIcon(new ImageIcon(adres + "\\white_50.jpg"));
+				}
+				if (birim[i][j].isGold() == true) {
+					birim[i][j].setIcon(new ImageIcon(adres + "\\white_50.jpg"));
+				}
+				if (birim[i][j].isDuvar() != true) {
+					birim[i][j].setIcon(new ImageIcon(adres + "\\white_50.jpg"));
+				}
+			}
+		}
+	}
+
+	public void deleteImage() {
+		for (int i = 0; i < satir; i++) {
+			for (int j = 0; j < sutun; j++) {
+				if (birim[i][j].isMantar() == true) {
+					birim[i][j].setMantar(false);
+					birim[i][j].setIcon(new ImageIcon(adres + "\\white_50.jpg"));
+				}
+				if (birim[i][j].isGold() == true) {
+					birim[i][j].setGold(false);
+					birim[i][j].setIcon(new ImageIcon(adres + "\\white_50.jpg"));
+				}
+				if (birim[i][j].isDuvar() != true) {
+					birim[i][j].setIcon(new ImageIcon(adres + "\\white_50.jpg"));
+				}
+			}
+		}
+	}
+
+	public void karsılasma_ara() {
+		if (birim[kahraman.getY()][kahraman.getX()].isMantar()) {
+			kahraman.setScor(kahraman.getScor().puanGoster() + 50);
+			birim[kahraman.getY()][kahraman.getX()].setMantar(false);
+			birim[kahraman.getY()][kahraman.getX()].setIcon(new ImageIcon(adres + "\\white_50.jpg"));
+		}
+		if (birim[kahraman.getY()][kahraman.getX()].isGold()) {
+			kahraman.setScor(kahraman.getScor().puanGoster() + 5);
+			birim[kahraman.getY()][kahraman.getX()].setGold(false);
+			birim[kahraman.getY()][kahraman.getX()].setIcon(new ImageIcon(adres + "\\white_50.jpg"));
+		}
+
+		if (hiz == 2 && gold == 1) {
+			kahraman.setScor(kahraman.getScor().puanGoster() + 5);
+			birim[kahraman.getY() + yon_y][kahraman.getX() + yon_x].setGold(false);
+			birim[kahraman.getY() + yon_y][kahraman.getX() + yon_x].setIcon(new ImageIcon(adres + "\\white_50.jpg"));
+		}
+
+		if (hiz == 2 && mntr == 1) {
+			kahraman.setScor(kahraman.getScor().puanGoster() + 50);
+			birim[kahraman.getY() + yon_y][kahraman.getX() + yon_x].setMantar(false);
+			birim[kahraman.getY() + yon_y][kahraman.getX() + yon_x].setIcon(new ImageIcon(adres + "\\white_50.jpg"));
+		}
+
+		if (karakterler.get(0).mesafe_kontrol()) {
+			if (karakterler.get(0).getId() == 1) {
+				kahraman.setScor(kahraman.getScor().puanGoster() - 5);
+			} else {
+				kahraman.setScor(kahraman.getScor().puanGoster() - 15);
+			}
+
+			if (dusman_karakter[0][1].contains("A")) {
+				karakterler.get(0).setX(3);
+				karakterler.get(0).setY(0);
+				dusman_kutu.get(0).setBounds(100 + (50 * karakterler.get(0).getX()),
+						50 + (50 * karakterler.get(0).getY()), 50, 50);
+			}
+			if (dusman_karakter[0][1].contains("B")) {
+				karakterler.get(0).setX(10);
+				karakterler.get(0).setY(0);
+				dusman_kutu.get(0).setBounds(100 + (50 * karakterler.get(0).getX()),
+						50 + (50 * karakterler.get(0).getY()), 50, 50);
+			}
+			if (dusman_karakter[0][1].contains("C")) {
+				karakterler.get(0).setX(0);
+				karakterler.get(0).setY(5);
+				dusman_kutu.get(0).setBounds(100 + (50 * karakterler.get(0).getX()),
+						50 + (50 * karakterler.get(0).getY()), 50, 50);
+			}
+			if (dusman_karakter[0][1].contains("D")) {
+				karakterler.get(0).setX(3);
+				karakterler.get(0).setY(10);
+				dusman_kutu.get(0).setBounds(100 + (50 * karakterler.get(0).getX()),
+						50 + (50 * karakterler.get(0).getY()), 50, 50);
+			}
+		}
+
+		if (dusman_sayisi == 2) {
+			if (karakterler.get(1).mesafe_kontrol()) {
+				if (karakterler.get(1).getId() == 1) {
+					kahraman.setScor(kahraman.getScor().puanGoster() - 5);
+				} else {
+					kahraman.setScor(kahraman.getScor().puanGoster() - 15);
+				}
+
+				if (dusman_karakter[1][1].contains("A")) {
+					karakterler.get(1).setX(3);
+					karakterler.get(1).setY(0);
+					dusman_kutu.get(1).setBounds(100 + (50 * karakterler.get(1).getX()),
+							50 + (50 * karakterler.get(1).getY()), 50, 50);
+				}
+				if (dusman_karakter[1][1].contains("B")) {
+					karakterler.get(1).setX(10);
+					karakterler.get(1).setY(0);
+					dusman_kutu.get(1).setBounds(100 + (50 * karakterler.get(1).getX()),
+							50 + (50 * karakterler.get(1).getY()), 50, 50);
+				}
+				if (dusman_karakter[1][1].contains("C")) {
+					karakterler.get(1).setX(0);
+					karakterler.get(1).setY(5);
+					dusman_kutu.get(1).setBounds(100 + (50 * karakterler.get(1).getX()),
+							50 + (50 * karakterler.get(1).getY()), 50, 50);
+				}
+				if (dusman_karakter[1][1].contains("D")) {
+					karakterler.get(1).setX(3);
+					karakterler.get(1).setY(10);
+					dusman_kutu.get(1).setBounds(100 + (50 * karakterler.get(1).getX()),
+							50 + (50 * karakterler.get(1).getY()), 50, 50);
+				}
+
+			}
+		}
+
+		if (kahraman.getScor().puanGoster() < 0) {
+			bitis_ekrani.setVisible(true);
+			bitis_ekrani.setIcon(new ImageIcon(adres + "lose1.jpg"));
+			oyuncu.setVisible(false);
+
+		}
+		if (kahraman.getX() == 12 && kahraman.getY() == 7) {
+			bitis_ekrani.setVisible(true);
+			bitis_ekrani.setIcon(new ImageIcon(adres + "win1.jpg"));
+			oyuncu.setVisible(false);
+
+		}
+
+	}
+
+	public void enKisaYoluHesapla() {
+		for (int i = 0; i < karakterler.size(); i++) {
+
+			karakterler.get(i).en_kisa_yol(kahraman.getX(), kahraman.getY(), map);
+		}
+
+	}
+
+	public void yolciz() {
+		for (int i = 0; i < karakterler.size(); i++) {
+			if (karakterler.get(i).getEn_kisa_yol() != null) {
+
+				for (int j = 0; j < karakterler.get(i).getEn_kisa_yol().size(); j += 2) {
+					int x = karakterler.get(i).getEn_kisa_yol().get(j);
+					int y = karakterler.get(i).getEn_kisa_yol().get(j + 1);
+
+					birim[x][y].setIcon(new ImageIcon(adres + "green_50.jpg"));
+				}
+			}
+		}
+	}
+
+	public void karakterHareketEttir() {
+
+		for (int i = 0; i < karakterler.size(); i++) {
+			if (karakterler.get(i).getEn_kisa_yol() != null) {
+				if (karakterler.get(i) instanceof gargamel) {
+					dusman_kutu.get(i).setBounds(100 + (50 * karakterler.get(i).getX()),
+							50 + (50 * karakterler.get(i).getY()), 50, 50);
+					karakterler.get(i).karakteri_hareket_ettir();
+				}
+				karakterler.get(i).karakteri_hareket_ettir();
+				dusman_kutu.get(i).setBounds(100 + (50 * karakterler.get(i).getX()),
+						50 + (50 * karakterler.get(i).getY()), 50, 50);
+			}
+
+		}
+	}
+
+	public void dusman_konumlandır() {
+
+		karakterler = new ArrayList<dusman>();
+		dusman yeni_gargamel = new gargamel();
+		dusman yeni_azman = new azman();
+
+		if (dusman_karakter[0][0].contains("Gargamel")) {
+
+			dusman.setIcon(new ImageIcon(adres + "gargamel_50.jpg"));
+			karakterler.add(yeni_gargamel);
+		}
+		if (dusman_karakter[0][0].contains("Azman")) {
+
+			dusman.setIcon(new ImageIcon(adres + "azman_50.jpg"));
+			karakterler.add(yeni_azman);
+		}
+		dusman_kutu.add(dusman);
+
+		if (dusman_karakter[0][1].contains("A")) {
+
+			dusman.setBounds(100 + (50 * 3), 50, 50, 50);
+			karakterler.get(0).setX(3);
+			karakterler.get(0).setY(0);
+		}
+
+		if (dusman_karakter[0][1].contains("B")) {
+
+			dusman.setBounds(100 + (50 * 10), 50, 50, 50);
+			karakterler.get(0).setX(10);
+			karakterler.get(0).setY(0);
+		}
+
+		if (dusman_karakter[0][1].contains("C")) {
+
+			dusman.setBounds(100, 50 + (50 * 5), 50, 50);
+			karakterler.get(0).setX(0);
+			karakterler.get(0).setY(5);
+		}
+
+		if (dusman_karakter[0][1].contains("D")) {
+
+			dusman.setBounds(100 + (50 * 3), 50 + (50 * 10), 50, 50);
+			karakterler.get(0).setX(3);
+			karakterler.get(0).setY(10);
+		}
+
+		if (dusman_sayisi == 2) {
+			dusman1.setVisible(true);
+
+			if (dusman_karakter[1][0].contains("Gargamel")) {
+
+				dusman1.setIcon(new ImageIcon(adres + "gargamel_50.jpg"));
+				karakterler.add(yeni_gargamel);
+			}
+			if (dusman_karakter[1][0].contains("Azman")) {
+
+				dusman1.setIcon(new ImageIcon(adres + "azman_50.jpg"));
+				karakterler.add(yeni_azman);
+			}
+			dusman_kutu.add(dusman1);
+
+			if (dusman_karakter[1][1].contains("A")) {
+
+				dusman1.setBounds(100 + (50 * 3), 50, 50, 50);
+				karakterler.get(1).setX(3);
+				karakterler.get(1).setY(0);
+			}
+			if (dusman_karakter[1][1].contains("B")) {
+
+				dusman1.setBounds(100 + (50 * 10), 50, 50, 50);
+				karakterler.get(1).setX(10);
+				karakterler.get(1).setY(0);
+			}
+			if (dusman_karakter[1][1].contains("C")) {
+
+				dusman1.setBounds(100, 50 + (50 * 5), 50, 50);
+				karakterler.get(1).setX(0);
+				karakterler.get(1).setY(5);
+			}
+			if (dusman_karakter[1][1].contains("D")) {
+
+				dusman1.setBounds(100 + (50 * 3), 50 + (50 * 10), 50, 50);
+				karakterler.get(1).setX(3);
+				karakterler.get(1).setY(10);
+			}
+
+		}
+
+	}
+
+
+}
+
+
+
+
+
+ class karakter extends locasyon {
+	String ad;
+	String tur;
+	int id;
+	protected ArrayList<Integer> en_kisa_yol = new ArrayList<Integer>();
+
+	public karakter() {
+		// TODO Auto-generated constructor stub
+	}
+
+	public karakter(String ad, String tur, int id) {
+		// TODO Auto-generated constructor stub
+		this.ad = ad;
+		this.tur = tur;
+		this.id = id;
+	}
+
+	int en_kisa_yol() {
+		return 0;
+	}
+
+	void setAd(String ad) {
+		this.ad = ad;
+	}
+
+	void setTur(String tur) {
+		this.tur = tur;
+	}
+
+	void setId(int id) {
+		this.id = id;
+	}
+
+	String getAd() {
+		return ad;
+	}
+
+	String getTur() {
+		return tur;
+	}
+
+	int getId() {
+		return id;
+	}
+
+	public void karakteri_hareket_ettir() {
+
+		if (this.en_kisa_yol.size() >= 4) {
+
+			this.x = this.en_kisa_yol.get(3);
+			this.y = this.en_kisa_yol.get(4);
+
+		}
+
+		System.out.println(this.en_kisa_yol.toString());
+	}
+
+	public void setEn_kisa_yol(ArrayList<Integer> enKisaYol) {
+		this.en_kisa_yol = enKisaYol;
+	}
+
+	public ArrayList<Integer> getEn_kisa_yol() {
+		return this.en_kisa_yol;
+	}
+
+	class Node {
+		short row, col;
+		int uzunluk = -1;
+		Node[] komsu = new Node[4];// r l d u
+		ArrayList<String> yol = new ArrayList<String>();
+	}
+
+	static short satir = 11;
+	static short sutun = 13;
+
+	public void en_kisa_yol(int oyuncu_x, int oyuncu_y, int[][] map) {
+		ArrayList<Integer> yeni_deneme = new ArrayList<Integer>();
+		ArrayList<Node> nodes = new ArrayList<Node>();
+		for (short i = 0; i < satir; i++) {
+			for (short j = 0; j < sutun; j++) {
+				Node node = new Node();
+				if (map[i][j] == 1) {
+					node.row = i;
+					node.col = j;
+					nodes.add(node);
+				}
+			}
+		}
+		for (var i : nodes) {
+			for (var j : nodes) {
+				if (i.row == j.row && i.col + 1 == j.col) {
+					i.komsu[0] = j;
+				} else if (i.row == j.row && i.col - 1 == j.col) {
+					i.komsu[1] = j;
+				} else if (i.row + 1 == j.row && i.col == j.col) {
+					i.komsu[2] = j;
+				} else if (i.row - 1 == j.row && i.col == j.col) {
+					i.komsu[3] = j;
+				}
+			}
+		}
+
+		int c = 0;
+		int bas_konum;
+		for (var i : nodes) {
+			if (i.col == this.getX() && this.getY() == i.row) {
+				bas_konum = c;
+				break;
+			}
+			c++;
+		}
+
+		Node bizim = nodes.get(c);
+		bizim.uzunluk = 0;
+		mesafe_hesaplama(bizim);
+		ArrayList<String> yeni = new ArrayList<String>();
+		int[] dizi = new int[2];
+		String[] dizi1 = new String[2];
+		for (var i : nodes) {
+			if (i.col == oyuncu_x && i.row == oyuncu_y) {
+				yeni = i.yol;
+				for (int d = 0; d < i.yol.size(); d++) {
+					dizi1 = yeni.get(d).split(",");
+					yeni_deneme.add(Integer.parseInt(dizi1[1]));
+					yeni_deneme.add(Integer.parseInt(dizi1[0]));
+
+				}
+			}
+		}
+
+		this.en_kisa_yol = yeni_deneme;
+
+	}
+
+	static void mesafe_hesaplama(Node baslangic) {
+		if (baslangic.komsu[0] != null) {
+			if (baslangic.komsu[0].uzunluk == -1) {
+				for (var i : baslangic.yol) {
+					baslangic.komsu[0].yol.add(i);
+				}
+				baslangic.komsu[0].yol.add(baslangic.col + "," + baslangic.row);
+				baslangic.komsu[0].uzunluk = baslangic.komsu[0].yol.size();
+				mesafe_hesaplama(baslangic.komsu[0]);
+			} else if (baslangic.komsu[0].uzunluk > (baslangic.uzunluk + 1)) {
+				ArrayList<String> metin = new ArrayList<String>();
+				for (var i : baslangic.yol) {
+					metin.add(i);
+				}
+				metin.add(baslangic.col + "," + baslangic.row);
+				baslangic.komsu[0].yol = metin;
+				baslangic.komsu[0].uzunluk = baslangic.komsu[0].yol.size();
+				mesafe_hesaplama(baslangic.komsu[0]);
+			}
+
+		}
+		if (baslangic.komsu[1] != null) {
+			if (baslangic.komsu[1].uzunluk == -1) {
+				for (var i : baslangic.yol) {
+					baslangic.komsu[1].yol.add(i);
+				}
+				baslangic.komsu[1].yol.add(baslangic.col + "," + baslangic.row);
+				baslangic.komsu[1].uzunluk = baslangic.komsu[1].yol.size();
+				mesafe_hesaplama(baslangic.komsu[1]);
+			} else if (baslangic.komsu[1].uzunluk > (baslangic.uzunluk + 1)) {
+				ArrayList<String> metin = new ArrayList<String>();
+				for (var i : baslangic.yol) {
+					metin.add(i);
+				}
+				metin.add(baslangic.col + "," + baslangic.row);
+				baslangic.komsu[1].yol = metin;
+				baslangic.komsu[1].uzunluk = baslangic.komsu[1].yol.size();
+				mesafe_hesaplama(baslangic.komsu[1]);
+			}
+		}
+		if (baslangic.komsu[2] != null) {
+			if (baslangic.komsu[2].uzunluk == -1) {
+				for (var i : baslangic.yol) {
+					baslangic.komsu[2].yol.add(i);
+				}
+				baslangic.komsu[2].yol.add(baslangic.col + "," + baslangic.row);
+				baslangic.komsu[2].uzunluk = baslangic.komsu[2].yol.size();
+				mesafe_hesaplama(baslangic.komsu[2]);
+			} else if (baslangic.komsu[2].uzunluk > (baslangic.uzunluk + 1)) {
+				ArrayList<String> metin = new ArrayList<String>();
+				for (var i : baslangic.yol) {
+					metin.add(i);
+				}
+				metin.add(baslangic.col + "," + baslangic.row);
+				baslangic.komsu[2].yol = metin;
+				baslangic.komsu[2].uzunluk = baslangic.komsu[2].yol.size();
+				mesafe_hesaplama(baslangic.komsu[2]);
+			}
+		}
+		if (baslangic.komsu[3] != null) {
+			if (baslangic.komsu[3].uzunluk == -1) {
+				for (var i : baslangic.yol) {
+					baslangic.komsu[3].yol.add(i);
+				}
+				baslangic.komsu[3].yol.add(baslangic.col + "," + baslangic.row);
+				baslangic.komsu[3].uzunluk = baslangic.komsu[3].yol.size();
+				mesafe_hesaplama(baslangic.komsu[3]);
+			} else if (baslangic.komsu[3].uzunluk > (baslangic.uzunluk + 1)) {
+				ArrayList<String> metin = new ArrayList<String>();
+				for (var i : baslangic.yol) {
+					metin.add(i);
+				}
+				metin.add(baslangic.col + "," + baslangic.row);
+				baslangic.komsu[3].yol = metin;
+				baslangic.komsu[3].uzunluk = baslangic.komsu[3].yol.size();
+				mesafe_hesaplama(baslangic.komsu[3]);
+			}
+		}
+
+	}
+	
+ }
+
+
+ class oyuncu extends karakter {
+
+	puan Scor;
+	int hiz;
+
+	public oyuncu(String ad, String tur, int id) {
+		super(ad, tur, id);
+		hiz = 1;
+	}
+	
+	public oyuncu() {
+		super();
+	}
+
+	public int getHiz() {
+		return hiz;
+	}
+
+	public void setHiz(int hiz) {
+		this.hiz = hiz;
+	}
+
+
+
+	public puan getScor() {
+		return Scor;
+	}
+
+	public void setScor(int deger) {
+		puan y = new puan();
+		y.setScor(deger);
+		Scor = y;
+	}
+
+}
+
+class gozlukluSirin extends oyuncu {
+
+	public gozlukluSirin() {
+		super("Gozluklu_sirin", "oyuncu", 1);
+		this.ad = "gozluklu";
+		this.tur = "oyuncu";
+		this.id = 1;
+	}
+	
+	public gozlukluSirin(String ad,String tur,int id) {
+		super(ad, tur, id);
+		this.ad = ad;
+		this.tur = tur;
+		this.id = id;
+	}
+	
+	
+
+	@Override
+	public int getHiz() {
+		// TODO Auto-generated method stub
+		return 2;
+	}
+
+}
+
+class tembelSirin extends oyuncu {
+
+	public tembelSirin() {
+		super("Tembel_sirin", "oyuncu", 2);
+		this.ad = "tembel";
+		this.tur = "oyuncu";
+		this.id = 2;
+	}
+	
+	public tembelSirin(String ad,String tur,int id) {
+		super(ad, tur, id);
+		this.ad = ad;
+		this.tur = tur;
+		this.id = id;
+	}
+
+	@Override
+	public int getHiz() {
+		// TODO Auto-generated method stub
+		return 1;
+	}
+
+}
+
+class puan extends oyuncu {
+	int scor;
+
+	public puan() {
+		super();
+		// TODO Auto-generated constructor stub
+		scor = 20;
+	}
+	
+	public puan(int deger) {
+		super();
+		// TODO Auto-generated constructor stub
+		scor = deger;
+	}
+
+	public void setScor(int scor) {
+		this.scor = scor;
+	}
+
+	public int puanGoster() {
+		return scor;
+	}
+
+}
+
+
+class dusman extends karakter {
+ 	
+ 	public dusman(String ad, String tur, int id) {
+ 		super(ad, tur, id);
+ 		this.ad=ad;
+ 		this.tur=tur;
+ 		this.id=id;
+ 	}
+
+ 	public dusman() {
+
+ 	}
+
+ 	public boolean mesafe_kontrol() {
+ 		if (this.en_kisa_yol.size() < 2) {
+ 			return true;
+ 		}
+ 		return false;
+ 	}
+
+ }
+
+ 
+ class azman extends dusman {
+
+ 	public azman() {
+ 		super("azman", "dusman", 1);
+ 		// TODO Auto-generated constructor stub
+ 	}
+ 	
+ 	public azman(String ad, String tur, int id) {
+ 		super(ad, tur, id);
+ 		this.ad=ad;
+ 		this.tur=tur;
+ 		this.id=id;
+ 	}
+
+ 	@Override
+ 	public boolean mesafe_kontrol() {
+ 		if (this.en_kisa_yol.size() <= 4) {
+ 			return true;
+ 		}
+ 		return false;
+ 	}
+
+ 	@Override
+ 	public void karakteri_hareket_ettir() {
+ 		if (this.en_kisa_yol.size() > 4) {
+
+ 			this.x = this.en_kisa_yol.get(3);
+ 			this.y = this.en_kisa_yol.get(4);
+
+ 		}
+ 	}
+
+ }
+
+
+ class gargamel extends dusman {
+
+ 	public gargamel() {
+ 		super("gargamel", "dusman", 2);
+ 		// TODO Auto-generated constructor stub
+ 	}
+ 	
+ 	public gargamel(String ad, String tur, int id) {
+ 		super(ad, tur, id);
+ 		this.ad=ad;
+ 		this.tur=tur;
+ 		this.id=id;
+ 	}
+
+ 	@Override
+ 	public boolean mesafe_kontrol() {
+ 		if (this.en_kisa_yol.size() <= 6) {
+ 			return true;
+ 		}
+ 		return false;
+ 	}
+
+ 	@Override
+ 	public void karakteri_hareket_ettir() {
+ 		// TODO Auto-generated method stub
+ 		if (this.en_kisa_yol.size() > 6) {
+
+ 			this.x = this.en_kisa_yol.get(5);
+ 			this.y = this.en_kisa_yol.get(6);
+
+ 		}
+
+ 	}
+
+ }
+
+class obje extends JLabel {
+
+ 	private boolean mantar, gold, duvar;
+
+ 	public obje() {
+ 		this.mantar = false;
+ 		this.gold = false;
+ 		this.duvar = false;
+ 	}
+
+ 	public obje(boolean mantar, boolean altin, boolean duvar) {
+
+ 		this.mantar = mantar;
+ 		this.gold = altin;
+ 		this.duvar = duvar;
+ 	}
+
+ 	public boolean isMantar() {
+ 		return mantar;
+ 	}
+
+ 	public void setMantar(boolean mantar) {
+ 		this.mantar = mantar;
+ 	}
+
+ 	public boolean isGold() {
+ 		return gold;
+ 	}
+
+ 	public void setGold(boolean gold) {
+ 		this.gold = gold;
+ 	}
+
+ 	public boolean isDuvar() {
+ 		return duvar;
+ 	}
+
+ 	public void setDuvar(boolean duvar) {
+ 		this.duvar = duvar;
+ 	}
+
+ }
+
+
+ class altin extends obje {
+ 
+ 	locasyon konum;
+
+ 	public altin() {
+ 		super();
+ 	}
+
+ 	@Override
+ 	public void setDuvar(boolean duvar) {
+ 		// TODO Auto-generated method stub
+ 		super.setDuvar(duvar);
+ 	}
+
+ 	public void generateGold(obje[][] birim, int satir, int sutun) {
+ 		int i = 0;
+
+ 		altin altin = new altin();
+ 		while (i < 5) {
+ 			int randRow = (int) (Math.random() * satir);
+ 			int randCol = (int) (Math.random() * sutun);
+ 			if (birim[randRow][randCol].isGold() != true && birim[randRow][randCol].isMantar() != true
+ 					&& birim[randRow][randCol].isDuvar() != true) {
+ 				birim[randRow][randCol].setGold(true);
+ 				i++;
+ 			}
+ 		}
+ 	}
+
+ 	public void setterGold(obje[][] birim, int satir, int sutun, String adres) {
+ 		for (int row = 0; row < satir; row++) {
+ 			for (int col = 0; col < sutun; col++) {
+ 				if (birim[row][col].isGold()) {
+ 					birim[row][col].setIcon(new ImageIcon(adres + "\\gold_50.jpg"));
+ 				}
+ 			}
+ 		}
+ 	}
+ }
+
+ class mantar extends obje {
+ 	locasyon konum;
+
+ 	public mantar() {
+ 		super();
+ 		// TODO Auto-generated constructor stub
+ 	}
+
+ 	public void generateMantar(obje[][] birim, int satir, int sutun) {
+ 		int i = 0;
+ 		while (i < 1) {
+ 			int randRow = (int) (Math.random() * satir);
+ 			int randCol = (int) (Math.random() * sutun);
+ 			if (birim[randRow][randCol].isGold() != true && birim[randRow][randCol].isMantar() != true
+ 					&& birim[randRow][randCol].isDuvar() != true) {
+ 				birim[randRow][randCol].setMantar(true);
+ 				i++;
+ 			}
+ 		}
+ 	}
+
+ 	public void setterMantar(obje[][] birim, int satir, int sutun, String adres) {
+ 		for (int row = 0; row < satir; row++) {
+ 			for (int col = 0; col < sutun; col++) {
+ 				if (birim[row][col].isMantar()) {
+ 					birim[row][col].setIcon(new ImageIcon(adres + "\\mantar_50.jpg"));
+ 				}
+ 			}
+ 		}
+ 	}
+
+ }
+ 
+ 
+
+  abstract class locasyon {
+ 	int x, y;
+
+ 	public locasyon() {
+
+ 	}
+
+ 	public locasyon(int x, int y) {
+ 		this.x = x;
+ 		this.y = y;
+ 	}
+
+ 	public int getX() {
+ 		return x;
+ 	}
+
+ 	void setX(int x) {
+ 		this.x = x;
+ 	}
+
+ 	public int getY() {
+ 		return y;
+ 	}
+
+ 	void setY(int y) {
+ 		this.y = y;
+ 	}
+
+  }
+
+
